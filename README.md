@@ -1,6 +1,6 @@
 manyfold-dark-ui
 A dark, minimal frontend UI for Manyfold self-hosted STL library servers.
-[screenshot placeholder]
+![screenshot](screenshot.png)
 Features
 
 Dark theme with yellow accent
