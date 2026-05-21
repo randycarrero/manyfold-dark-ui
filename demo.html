@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manyfold Dark UI — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.demo-banner { background: rgba(232,255,71,0.08); border-bottom: 1px solid rgba(232,255,71,0.2); padding: 8px 20px; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--accent); font-family: 'Space Mono', monospace; }
+.demo-banner a { color: var(--accent); text-decoration: underline; }
+.demo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+</head>
+<body>
+
+<div class="app" style="flex-direction:column">
+  <div class="demo-banner">
+    <div class="demo-dot"></div>
+    DEMO MODE — Sample data only. <a href="index.html">Connect your Manyfold server →</a>
+  </div>
+
+  <div style="display:flex;flex:1;overflow:hidden">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-name">MANYFOLD</div>
+      <div class="brand-sub">STL Library</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Browse</div>
+      <div class="nav-item active" onclick="filterCategory('all')" id="nav-all">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        All Models
+        <span class="nav-count" id="count-all">24</span>
+      </div>
+      <div class="nav-item" onclick="filterCategory('Gunpla Weapons')" id="nav-gunpla">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Gunpla Weapons
+        <span class="nav-count">8</span>
+      </div>
+      <div class="nav-item" onclick="filterCategory('Resin Minis')" id="nav-resin">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Resin Minis
+        <span class="nav-count">7</span>
+      </div>
+      <div class="nav-item" onclick="filterCategory('Mech Designs')" id="nav-mech">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Mech Designs
+        <span class="nav-count">5</span>
+      </div>
+      <div class="nav-item" onclick="filterCategory('Custom Prints')" id="nav-custom">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Custom Prints
+        <span class="nav-count">4</span>
+      </div>
+    </div>
+
+    <div class="tag-section">
+      <div class="nav-label" style="padding:0 8px;margin-bottom:8px">Tags</div>
+      <div class="tag-chips" id="tag-chips"></div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="bottom-btn" onclick="window.location.href='profile.html'" title="Profile">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </div>
+      <div class="bottom-btn" onclick="window.location.href='index.html'" title="Connect">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Connect
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="toolbar">
+      <div class="toolbar-title" id="toolbar-title">All Models</div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" type="text" placeholder="Search models..." id="search-input" oninput="render()">
+      </div>
+      <div class="sort-wrap">
+        <select id="sort-select" onchange="render()">
+          <option value="name">Sort: Name</option>
+          <option value="format">Sort: Format</option>
+          <option value="size">Sort: Size</option>
+        </select>
+      </div>
+      <div class="view-btns">
+        <button class="view-btn active" id="vbtn-grid" onclick="setMode('grid')" title="Grid view">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </button>
+        <button class="view-btn" id="vbtn-list" onclick="setMode('list')" title="List view">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="content" id="content"></div>
+
+    <div class="statusbar">
+      <div class="stat">Models: <span id="stat-count">24</span></div>
+      <div class="stat" style="color:var(--accent)">● DEMO MODE</div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)" onclick="if(event.target===this)closeModal()">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:420px;max-width:100%;padding:20px" id="modal-inner"></div>
+</div>
+
+<script>
+const MODELS = [
+  {id:1,name:"HG RX-78-2 Beam Rifle",category:"Gunpla Weapons",format:"STL",size:"4.2 MB",tags:["gunpla","weapon","hg"],color:"#4a9eff"},
+  {id:2,name:"MG Wing Zero Buster Rifle",category:"Gunpla Weapons",format:"3MF",size:"7.8 MB",tags:["gunpla","weapon","mg"],color:"#4a9eff"},
+  {id:3,name:"PG Unicorn Shield",category:"Gunpla Weapons",format:"STL",size:"11.3 MB",tags:["gunpla","shield","pg"],color:"#4a9eff"},
+  {id:4,name:"RG Strike Freedom Sword",category:"Gunpla Weapons",format:"STL",size:"3.6 MB",tags:["gunpla","weapon","rg"],color:"#4a9eff"},
+  {id:5,name:"HG Zaku II Machine Gun",category:"Gunpla Weapons",format:"3MF",size:"5.1 MB",tags:["gunpla","weapon","zaku"],color:"#4a9eff"},
+  {id:6,name:"MG Exia GN Sword",category:"Gunpla Weapons",format:"STL",size:"8.9 MB",tags:["gunpla","weapon","exia"],color:"#4a9eff"},
+  {id:7,name:"RG Destiny Arondight",category:"Gunpla Weapons",format:"STL",size:"6.2 MB",tags:["gunpla","weapon","destiny"],color:"#4a9eff"},
+  {id:8,name:"PG Strike Freedom Wings",category:"Gunpla Weapons",format:"3MF",size:"22.4 MB",tags:["gunpla","wings","pg"],color:"#4a9eff"},
+  {id:9,name:"Dark Elf Archer",category:"Resin Minis",format:"STL",size:"28.4 MB",tags:["mini","fantasy","elf"],color:"#2ed8a8"},
+  {id:10,name:"Space Marine Sergeant",category:"Resin Minis",format:"STL",size:"19.7 MB",tags:["mini","sci-fi","marine"],color:"#2ed8a8"},
+  {id:11,name:"Dragon Bust Large",category:"Resin Minis",format:"3MF",size:"44.1 MB",tags:["mini","fantasy","bust"],color:"#2ed8a8"},
+  {id:12,name:"Orc Warboss",category:"Resin Minis",format:"STL",size:"31.2 MB",tags:["mini","fantasy","orc"],color:"#2ed8a8"},
+  {id:13,name:"Undead Knight",category:"Resin Minis",format:"STL",size:"25.8 MB",tags:["mini","fantasy","undead"],color:"#2ed8a8"},
+  {id:14,name:"Dwarf Berserker",category:"Resin Minis",format:"3MF",size:"18.3 MB",tags:["mini","fantasy","dwarf"],color:"#2ed8a8"},
+  {id:15,name:"Cyberpunk Assassin",category:"Resin Minis",format:"STL",size:"22.7 MB",tags:["mini","sci-fi","cyberpunk"],color:"#2ed8a8"},
+  {id:16,name:"Zaku II Full Armor",category:"Mech Designs",format:"STL",size:"88.5 MB",tags:["mech","zaku","commissioned"],color:"#a78bfa"},
+  {id:17,name:"Gelgoog Leg Armor",category:"Mech Designs",format:"STEP",size:"34.9 MB",tags:["mech","gelgoog"],color:"#a78bfa"},
+  {id:18,name:"Wing Zero Custom Torso",category:"Mech Designs",format:"STL",size:"56.2 MB",tags:["mech","wing","custom"],color:"#a78bfa"},
+  {id:19,name:"Sazabi Shoulder Armor",category:"Mech Designs",format:"3MF",size:"41.7 MB",tags:["mech","sazabi"],color:"#a78bfa"},
+  {id:20,name:"Nu Gundam Fin Funnels",category:"Mech Designs",format:"STL",size:"29.3 MB",tags:["mech","nu-gundam","funnels"],color:"#a78bfa"},
+  {id:21,name:"Custom Name Plate",category:"Custom Prints",format:"STL",size:"0.8 MB",tags:["custom","text"],color:"#ff6b35"},
+  {id:22,name:"Phone Stand V2",category:"Custom Prints",format:"3MF",size:"2.1 MB",tags:["custom","utility"],color:"#ff6b35"},
+  {id:23,name:"Desk Cable Organizer",category:"Custom Prints",format:"STL",size:"1.4 MB",tags:["custom","utility"],color:"#ff6b35"},
+  {id:24,name:"Mini Display Base",category:"Custom Prints",format:"STL",size:"3.3 MB",tags:["custom","display"],color:"#ff6b35"},
+];
+
+const ALL_TAGS = [...new Set(MODELS.flatMap(m=>m.tags))].sort();
+let activeCategory = 'all';
+let activeTags = [];
+let viewMode = 'grid';
+
+const cubeIcon = (color='#555560') => `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`;
+
+function filterCategory(cat) {
+  activeCategory = cat;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const map = {'all':'nav-all','Gunpla Weapons':'nav-gunpla','Resin Minis':'nav-resin','Mech Designs':'nav-mech','Custom Prints':'nav-custom'};
+  const el = document.getElementById(map[cat]);
+  if (el) el.classList.add('active');
+  document.getElementById('toolbar-title').textContent = cat === 'all' ? 'All Models' : cat;
+  render();
+}
+
+function toggleTag(tag) {
+  if (activeTags.includes(tag)) activeTags = activeTags.filter(t=>t!==tag);
+  else activeTags.push(tag);
+  renderTags();
+  render();
+}
+
+function renderTags() {
+  document.getElementById('tag-chips').innerHTML = ALL_TAGS.map(t =>
+    `<span class="tag-chip${activeTags.includes(t)?' active':''}" onclick="toggleTag('${t}')">${t}</span>`
+  ).join('');
+}
+
+function getFiltered() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const sort = document.getElementById('sort-select').value;
+  let filtered = MODELS.filter(m => {
+    const matchCat = activeCategory === 'all' || m.category === activeCategory;
+    const matchQ = !q || m.name.toLowerCase().includes(q) || m.tags.some(t=>t.includes(q)) || m.category.toLowerCase().includes(q);
+    const matchTags = activeTags.length === 0 || activeTags.every(t=>m.tags.includes(t));
+    return matchCat && matchQ && matchTags;
+  });
+  filtered.sort((a,b) => {
+    if (sort === 'name') return a.name.localeCompare(b.name);
+    if (sort === 'format') return a.format.localeCompare(b.format);
+    if (sort === 'size') return parseFloat(a.size) - parseFloat(b.size);
+    return 0;
+  });
+  return filtered;
+}
+
+function fmtBadgeStyle(fmt) {
+  const styles = {STL:'background:rgba(74,158,255,0.15);color:#4a9eff',
+    '3MF':'background:rgba(46,216,168,0.15);color:#2ed8a8',
+    STEP:'background:rgba(167,139,250,0.15);color:#a78bfa',
+    OBJ:'background:rgba(255,107,53,0.15);color:#ff6b35'};
+  return styles[fmt] || styles.STL;
+}
+
+function render() {
+  const filtered = getFiltered();
+  document.getElementById('stat-count').textContent = filtered.length;
+  const content = document.getElementById('content');
+
+  if (filtered.length === 0) {
+    content.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div class="empty-title">No models found</div>
+      <div class="empty-sub">Try a different search or clear your filters</div>
+    </div>`;
+    return;
+  }
+
+  if (viewMode === 'grid') {
+    content.innerHTML = `<div class="grid">${filtered.map(m => `
+      <div class="card" onclick="openModal(${m.id})">
+        <div class="card-thumb" style="background:rgba(0,0,0,0.2)">
+          <div style="width:60px;height:60px">${cubeIcon(m.color)}</div>
+          <span class="format-badge" style="${fmtBadgeStyle(m.format)}">${m.format}</span>
+        </div>
+        <div class="card-body">
+          <div class="card-name" title="${m.name}">${m.name}</div>
+          <div class="card-sub">${m.category}</div>
+          <div class="card-tags">${m.tags.map(t=>`<span class="card-tag">${t}</span>`).join('')}</div>
+        </div>
+      </div>`).join('')}</div>`;
+  } else {
+    content.innerHTML = `<div class="list">${filtered.map(m => `
+      <div class="list-item" onclick="openModal(${m.id})">
+        <div class="list-icon" style="background:rgba(0,0,0,0.2)">${cubeIcon(m.color)}</div>
+        <div class="list-info">
+          <div class="list-name">${m.name}</div>
+          <div class="list-meta">${m.category} · ${m.size}</div>
+        </div>
+        <div style="display:flex;gap:4px">${m.tags.slice(0,2).map(t=>`<span class="card-tag">${t}</span>`).join('')}</div>
+        <span style="font-size:10px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:4px;${fmtBadgeStyle(m.format)}">${m.format}</span>
+        <span style="font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;min-width:60px;text-align:right">${m.size}</span>
+      </div>`).join('')}</div>`;
+  }
+}
+
+function setMode(m) {
+  viewMode = m;
+  document.getElementById('vbtn-grid').classList.toggle('active', m==='grid');
+  document.getElementById('vbtn-list').classList.toggle('active', m==='list');
+  render();
+}
+
+function openModal(id) {
+  const m = MODELS.find(m=>m.id===id);
+  if (!m) return;
+  document.getElementById('modal-inner').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:600;color:var(--text);line-height:1.3;flex:1;padding-right:12px">${m.name}</div>
+      <button onclick="closeModal()" style="width:28px;height:28px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="height:160px;background:rgba(0,0,0,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;border:1px solid var(--border)">
+      <div style="width:80px;height:80px">${cubeIcon(m.color)}</div>
+    </div>
+    <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px">
+      ${[['Format',`<span style="font-family:'Space Mono',monospace;font-size:12px;padding:2px 8px;border-radius:4px;${fmtBadgeStyle(m.format)}">${m.format}</span>`],
+         ['Category',m.category],['File size',m.size],
+         ['Tags',m.tags.map(t=>`<span class="card-tag">${t}</span>`).join(' ')]
+        ].map(([k,v],i,arr)=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;${i<arr.length-1?'border-bottom:1px solid var(--border)':''}">
+          <span style="font-size:12px;color:var(--text3)">${k}</span>
+          <span style="font-size:12px;color:var(--text)">${v}</span>
+        </div>`).join('')}
+    </div>
+    <div style="background:rgba(232,255,71,0.06);border:1px solid rgba(232,255,71,0.15);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent);font-family:'Space Mono',monospace;text-align:center">
+      Connect your server to download & manage
+    </div>`;
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+renderTags();
+render();
+</script>
+</body>
+</html>
