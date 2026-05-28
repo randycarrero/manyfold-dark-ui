@@ -162,7 +162,7 @@ function getModelId(m) {
 }
 
 function getModelName(m) {
-  return m.attributes?.name || m.attributes?.slug || 'Unnamed';
+  return m.name || m.attributes?.name || m.attributes?.slug || 'Unnamed';
 }
 
 function renderModels(models) {
