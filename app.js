@@ -7,7 +7,7 @@ let displayMode = 'grid';
 let currentPage = 1;
 let searchTimer = null;
 
-// ── Credentials ──────────────────────────────────────────────────────────────
+// ── Credentials ───────────────────────────────────────────────────────────────
 
 function saveCredentials() {
   const data = {
@@ -68,7 +68,7 @@ async function connect() {
         grant_type: 'client_credentials',
         client_id: clientId,
         client_secret: clientSecret,
-        scope: 'read public'
+        scope: 'read write public'
       })
     });
 
@@ -79,8 +79,7 @@ async function connect() {
     saveCredentials();
     setStatus('Connected', 'ok');
     fetchModels(1);
-    fetchCollections();
-    fetchCreators();
+    fetchSidebarCounts();
   } catch(e) {
     setStatus('Connection failed — check credentials', 'err');
     console.error(e);
@@ -89,6 +88,7 @@ async function connect() {
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
+// Manyfold v2 uses JSON:API spec — Accept header must be application/vnd.manyfold.v0+json
 async function apiFetch(path) {
   const resp = await fetch(`${serverUrl}${path}`, {
     headers: {
@@ -100,6 +100,8 @@ async function apiFetch(path) {
   return resp.json();
 }
 
+// ── Models ────────────────────────────────────────────────────────────────────
+
 async function fetchModels(page = 1) {
   if (!accessToken) return;
   currentPage = page;
@@ -107,51 +109,65 @@ async function fetchModels(page = 1) {
 
   const q = document.getElementById('search-input').value.trim();
   const order = document.getElementById('sort-select').value;
+
+  // Manyfold v2 JSON:API endpoint
   let path = `/models?page=${page}&order=${order}`;
-  if (q) path += `&search=${encodeURIComponent(q)}`;
+  if (q) path += `&filter[search]=${encodeURIComponent(q)}`;
 
   try {
     const data = await apiFetch(path);
-    const total = data.totalItems || 0;
+
+    // JSON:API response shape: { data: [...], meta: { total_count }, links: {} }
+    const models = data.member || data.data || [];
+    const total = data.totalItems ?? data.meta?.total_count ?? models.length;
+
     document.getElementById('stat-total').textContent = total.toLocaleString();
     document.getElementById('count-models').textContent = total.toLocaleString();
-    renderModels(data.member || []);
-    renderPagination(data.view, page);
+
+    renderModels(models);
+    renderPagination(data.links, data.meta, page);
   } catch(e) {
-    showError('Failed to load models — API may still be scanning');
+    showError('Failed to load models');
     console.error(e);
   }
 }
 
-async function fetchCollections() {
-  if (!accessToken) return;
-  try {
-    const data = await apiFetch('/collections');
-    document.getElementById('count-collections').textContent = (data.totalItems || 0).toLocaleString();
-  } catch(e) {}
-}
+// ── Sidebar counts ────────────────────────────────────────────────────────────
 
-async function fetchCreators() {
+async function fetchSidebarCounts() {
   if (!accessToken) return;
   try {
-    const data = await apiFetch('/creators');
-    document.getElementById('count-creators').textContent = (data.totalItems || 0).toLocaleString();
-  } catch(e) {}
+    const [colData, creatorData] = await Promise.all([
+      apiFetch('/collections'),
+      apiFetch('/creators')
+    ]);
+    document.getElementById('count-collections').textContent =
+      (colData.totalItems ?? colData.meta?.total_count ?? 0).toLocaleString();
+    document.getElementById('count-creators').textContent =
+      (creatorData.totalItems ?? creatorData.meta?.total_count ?? 0).toLocaleString();
+  } catch(e) {
+    console.warn('Could not load sidebar counts', e);
+  }
 }
 
 // ── Rendering ─────────────────────────────────────────────────────────────────
 
-function modelId(m) {
-  if (typeof m['@id'] === 'string') {
+// In JSON:API, each item has id at top level and attributes nested
+function getModelId(m) {
+  if (m['@id']) {
     const parts = m['@id'].split('/');
     return parts[parts.length - 1];
   }
   return m.id || '';
 }
 
+function getModelName(m) {
+  return m.attributes?.name || m.attributes?.slug || 'Unnamed';
+}
+
 function renderModels(models) {
   const content = document.getElementById('content');
-  if (models.length === 0) {
+  if (!models.length) {
     content.innerHTML = `<div class="empty">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <div class="empty-title">No models found</div>
@@ -162,7 +178,8 @@ function renderModels(models) {
 
   if (displayMode === 'grid') {
     const cards = models.map(m => {
-      const id = modelId(m);
+      const id = getModelId(m);
+      const name = getModelName(m);
       return `<div class="card" onclick="openModel('${id}')">
         <div class="card-thumb">
           <img src="${serverUrl}/models/${id}/card_image"
@@ -172,7 +189,7 @@ function renderModels(models) {
           <span class="format-badge">3D</span>
         </div>
         <div class="card-body">
-          <div class="card-name" title="${(m.name||'').replace(/"/g,'&quot;')}">${m.name||'Unnamed'}</div>
+          <div class="card-name" title="${name.replace(/"/g,'&quot;')}">${name}</div>
           <div class="card-sub">ID ${id}</div>
         </div>
       </div>`;
@@ -180,7 +197,8 @@ function renderModels(models) {
     content.innerHTML = `<div class="grid">${cards}</div>`;
   } else {
     const items = models.map(m => {
-      const id = modelId(m);
+      const id = getModelId(m);
+      const name = getModelName(m);
       return `<div class="list-item" onclick="openModel('${id}')">
         <div class="list-icon">
           <img src="${serverUrl}/models/${id}/card_image"
@@ -188,7 +206,7 @@ function renderModels(models) {
                style="display:block">
         </div>
         <div class="list-info">
-          <div class="list-name">${m.name||'Unnamed'}</div>
+          <div class="list-name">${name}</div>
           <div class="list-meta">ID: ${id}</div>
         </div>
       </div>`;
@@ -197,15 +215,16 @@ function renderModels(models) {
   }
 }
 
-function renderPagination(view, page) {
+function renderPagination(links, meta, page) {
   const existing = document.querySelector('.pagination');
   if (existing) existing.remove();
-  if (!view) return;
 
-  const lastUrl = view.last || '';
-  const lastMatch = lastUrl.match(/page=(\d+)/);
-  const totalPages = lastMatch ? parseInt(lastMatch[1]) : 1;
+  const total = meta?.total_count ?? 0;
+  const pageSize = 48;
+  const totalPages = Math.ceil(total / pageSize);
+
   document.getElementById('stat-page').textContent = `${page} / ${totalPages}`;
+  if (totalPages <= 1) return;
 
   const pag = document.createElement('div');
   pag.className = 'pagination';
@@ -267,13 +286,11 @@ function showError(msg) {
 }
 
 function openProfile() {
-  if (serverUrl) window.open(`${serverUrl}/profile`, '_blank');
-  else alert('Connect to Manyfold first!');
+  window.location.href = 'profile.html';
 }
 
 function openSettings() {
-  if (serverUrl) window.open(`${serverUrl}/settings`, '_blank');
-  else alert('Connect to Manyfold first!');
+  window.location.href = 'settings.html';
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
